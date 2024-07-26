@@ -129,7 +129,7 @@ package main
 
 import (
 	"log"
-	"lazydeus/cades"
+	cades "github.com/Demetrous-fd/CryptoPro-Adapter"
 )
 
 func getCertificate(thumbprint string) (*cades.Certificate, error) {

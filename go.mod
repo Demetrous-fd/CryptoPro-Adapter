@@ -1,4 +1,4 @@
-module lazydeus/cades
+module github.com/Demetrous-fd/CryptoPro-Adapter
 
 go 1.21.1
 
