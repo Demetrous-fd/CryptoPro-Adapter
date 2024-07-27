@@ -130,7 +130,7 @@ func NewCades() (*Cades, error) {
 }
 
 func (cades *Cades) Close() {
-	cades.Process.cmd.Process.Kill()
+	cades.Process.Cmd.Process.Kill()
 }
 
 func (cades *Cades) handlerCallback(answer *CadesResponseBody) (*CadesResponseBody, error) {
@@ -210,9 +210,9 @@ func (cades *Cades) SendRequest(request *CadesRequestBody) (*CadesResponseData, 
 func (cades *Cades) sendRequestToProcess(request []byte) (*CadesResponseBody, error) {
 
 	slog.Debug(fmt.Sprintf("[Cades.send] Send message: %s", string(request)))
-	PostMessage(*cades.Process.stdin, request)
+	PostMessage(*cades.Process.Stdin, request)
 
-	message := GetMessage(*cades.Process.stdout)
+	message := GetMessage(*cades.Process.Stdout)
 	slog.Debug(fmt.Sprintf("[Cades.send] Receive message: %s", message))
 
 	var answer CadesResponseBody
