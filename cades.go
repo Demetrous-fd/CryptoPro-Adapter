@@ -43,7 +43,7 @@ type CadesResponseData struct {
 	Message     string      `json:"message,omitempty"`
 }
 
-func cadesDataFromAnswer(answer *CadesResponseBody) (*CadesResponseData, error) {
+func CadesDataFromAnswer(answer *CadesResponseBody) (*CadesResponseData, error) {
 	var data CadesResponseData
 	if err := json.Unmarshal(*answer.Data, &data); err != nil {
 		return &CadesResponseData{}, err
@@ -118,7 +118,7 @@ func NewCades() (*Cades, error) {
 		return &cades, err
 	}
 
-	data, err := cadesDataFromAnswer(answer)
+	data, err := CadesDataFromAnswer(answer)
 	if err != nil {
 		return &cades, err
 
@@ -196,7 +196,7 @@ func (cades *Cades) SendRequest(request *CadesRequestBody) (*CadesResponseData, 
 		return &CadesResponseData{}, err
 	}
 
-	data, err := cadesDataFromAnswer(answer)
+	data, err := CadesDataFromAnswer(answer)
 	if err != nil {
 		return &CadesResponseData{}, err
 

@@ -9,6 +9,15 @@
 
 ### Запуск процессов
 - `NewNMCadesProcess() (*CadesProcess, error)`
+	```golang
+	type CadesProcess struct {
+		cmd    *exec.Cmd
+		stdout *io.ReadCloser
+		stdin  *io.WriteCloser
+	}
+	func PostMessage(file io.WriteCloser, message []byte) error
+	func GetMessage(stdout io.ReadCloser) string
+	```
 - `NewCertManagerProcess(args ...string) (string, error)`
 
 ### Utils
