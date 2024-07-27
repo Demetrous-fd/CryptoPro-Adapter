@@ -75,19 +75,24 @@ func ReadHeader(stdout io.ReadCloser) (uint32, error) {
 	return nativeEndian.Uint32(length), nil
 }
 
-func GetMessage(stdout io.ReadCloser) string {
+func GetMessageAsBytes(stdout io.ReadCloser) []byte {
 	length, err := ReadHeader(stdout)
 	if err != nil || length == 0 {
-		return ""
+		return []byte{}
 	}
 
 	data := make([]byte, length)
 
 	_, err = stdout.Read(data)
 	if err != nil {
-		return ""
+		return []byte{}
 	}
 
+	return data
+}
+
+func GetMessage(stdout io.ReadCloser) string {
+	data := GetMessageAsBytes(stdout)
 	return string(data)
 }
 
