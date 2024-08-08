@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"bytes"
 	"encoding/binary"
-	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -138,10 +137,13 @@ func NewCertManagerProcess(args ...string) (string, error) {
 
 	path, cryptopro_folder_set := os.LookupEnv("CRYPTOPRO_FOLDER")
 	if runtime.GOOS == "linux" {
-		pathMgr = fmt.Sprintf("/opt/cprocsp/bin/%s/certmgr", runtime.GOARCH)
 		if cryptopro_folder_set {
 			pathMgr = fmt.Sprintf("%s/certmgr", path)
-		} else if _, err := os.Stat(pathMgr); errors.Is(err, os.ErrNotExist) {
+		} else if _, err := os.Stat("/opt/cprocsp/bin/amd64/certmgr"); err == nil {
+			pathMgr = "/opt/cprocsp/bin/amd64/certmgr"
+		} else if _, err := os.Stat("/opt/cprocsp/bin/386/certmgr"); err == nil {
+			pathMgr = "/opt/cprocsp/bin/386/certmgr"
+		} else {
 			panic(err_message)
 		}
 
