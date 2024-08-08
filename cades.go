@@ -3,8 +3,9 @@ package cades
 import (
 	"encoding/json"
 	"fmt"
-	"log/slog"
 	"strings"
+
+	"golang.org/x/exp/slog"
 )
 
 type CallbackData struct {

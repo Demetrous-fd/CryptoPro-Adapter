@@ -2,10 +2,11 @@ package cades
 
 import (
 	"fmt"
-	"log/slog"
 	"regexp"
 	"runtime"
 	"strings"
+
+	"golang.org/x/exp/slog"
 )
 
 var SHA1_PATTERN = regexp.MustCompile(`(?m)^SHA1 .*$`)

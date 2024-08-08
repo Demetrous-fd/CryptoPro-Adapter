@@ -4,13 +4,15 @@ import (
 	"bufio"
 	"bytes"
 	"encoding/binary"
+	"errors"
 	"fmt"
 	"io"
-	"log/slog"
+	"os"
 	"os/exec"
 	"runtime"
 	"unsafe"
 
+	"golang.org/x/exp/slog"
 	"golang.org/x/text/encoding/charmap"
 )
 
@@ -127,11 +129,27 @@ func NewNMCadesProcess() (*CadesProcess, error) {
 
 func NewCertManagerProcess(args ...string) (string, error) {
 	var pathMgr string
+	err_message := "Не удаётся найти файл Certmgr. Если вы установили КриптоПро не по умолчанию, создайте переменную среды CRYPTOPRO_FOLDER и укажите путь до папки КриптоПро."
 
+	path, cryptopro_folder_set := os.LookupEnv("CRYPTOPRO_FOLDER")
 	if runtime.GOOS == "linux" {
 		pathMgr = fmt.Sprintf("/opt/cprocsp/bin/%s/certmgr", runtime.GOARCH)
+		if cryptopro_folder_set {
+			pathMgr = fmt.Sprintf("%s/certmgr", path)
+		} else if _, err := os.Stat(pathMgr); errors.Is(err, os.ErrNotExist) {
+			panic(err_message)
+		}
+
 	} else {
-		pathMgr = "C:\\Program Files\\Crypto Pro\\CSP\\certmgr.exe"
+		if _, err := os.Stat("C:\\Program Files\\Crypto Pro\\CSP\\certmgr.exe"); err == nil {
+			pathMgr = "C:\\Program Files\\Crypto Pro\\CSP\\certmgr.exe"
+		} else if _, err := os.Stat("C:\\Program Files (x86)\\Crypto Pro\\CSP\\certmgr.exe"); err == nil {
+			pathMgr = "C:\\Program Files (x86)\\Crypto Pro\\CSP\\certmgr.exe"
+		} else if cryptopro_folder_set {
+			pathMgr = fmt.Sprintf("%s\\CSP\\certmgr.exe", path)
+		} else {
+			panic(err_message)
+		}
 	}
 	cmd := exec.Command(pathMgr, args...)
 
