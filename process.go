@@ -19,12 +19,12 @@ import (
 var nativeEndian binary.ByteOrder
 
 type CadesProcess struct {
-	cmd    *exec.Cmd
-	stdout *io.ReadCloser
-	stdin  *io.WriteCloser
+	Cmd    *exec.Cmd
+	Stdout *io.ReadCloser
+	Stdin  *io.WriteCloser
 }
 
-func determineByteOrder() {
+func DetermineByteOrder() {
 	// determine native byte order so that we can read message size correctly
 	var one int16 = 1
 	b := (*byte)(unsafe.Pointer(&one))
@@ -35,7 +35,7 @@ func determineByteOrder() {
 	}
 }
 
-func writeHeader(writer io.Writer, length int) error {
+func WriteHeader(writer io.Writer, length int) error {
 	header := make([]byte, 4)
 	nativeEndian.PutUint32(header, (uint32)(length))
 
@@ -52,7 +52,7 @@ func PostMessage(file io.WriteCloser, message []byte) error {
 
 	length := len(message)
 
-	if err := writeHeader(writer, length); err != nil {
+	if err := WriteHeader(writer, length); err != nil {
 		return err
 	}
 
@@ -66,7 +66,7 @@ func PostMessage(file io.WriteCloser, message []byte) error {
 	return nil
 }
 
-func readHeader(stdout io.ReadCloser) (uint32, error) {
+func ReadHeader(stdout io.ReadCloser) (uint32, error) {
 	length := make([]byte, 4)
 
 	_, err := stdout.Read(length)
@@ -77,25 +77,30 @@ func readHeader(stdout io.ReadCloser) (uint32, error) {
 	return nativeEndian.Uint32(length), nil
 }
 
-func GetMessage(stdout io.ReadCloser) string {
-	length, err := readHeader(stdout)
+func GetMessageAsBytes(stdout io.ReadCloser) []byte {
+	length, err := ReadHeader(stdout)
 	if err != nil || length == 0 {
-		return ""
+		return []byte{}
 	}
 
 	data := make([]byte, length)
 
 	_, err = stdout.Read(data)
 	if err != nil {
-		return ""
+		return []byte{}
 	}
 
+	return data
+}
+
+func GetMessage(stdout io.ReadCloser) string {
+	data := GetMessageAsBytes(stdout)
 	return string(data)
 }
 
 func NewNMCadesProcess() (*CadesProcess, error) {
 	if nativeEndian == nil {
-		determineByteOrder()
+		DetermineByteOrder()
 	}
 	var pathMgr string
 
@@ -124,7 +129,7 @@ func NewNMCadesProcess() (*CadesProcess, error) {
 		return &CadesProcess{}, err
 	}
 
-	return &CadesProcess{cmd: cmd, stdout: &stdout, stdin: &stdin}, nil
+	return &CadesProcess{Cmd: cmd, Stdout: &stdout, Stdin: &stdin}, nil
 }
 
 func NewCertManagerProcess(args ...string) (string, error) {
