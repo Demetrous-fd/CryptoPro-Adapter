@@ -4,10 +4,12 @@ import (
 	"bufio"
 	"bytes"
 	"encoding/binary"
+	"errors"
 	"fmt"
 	"io"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"runtime"
 	"unsafe"
 
@@ -101,12 +103,10 @@ func NewNMCadesProcess() (*CadesProcess, error) {
 	if nativeEndian == nil {
 		DetermineByteOrder()
 	}
-	var pathMgr string
 
-	if runtime.GOOS == "linux" {
-		pathMgr = fmt.Sprintf("/opt/cprocsp/bin/%s/nmcades", runtime.GOARCH)
-	} else {
-		pathMgr = "C:\\Program Files (x86)\\Crypto Pro\\CAdES Browser Plug-in\\nmcades.exe"
+	pathMgr, err := getCryptoProUtilPath("nmcades")
+	if err != nil {
+		return &CadesProcess{}, err
 	}
 	cmd := exec.Command(pathMgr)
 
@@ -131,31 +131,70 @@ func NewNMCadesProcess() (*CadesProcess, error) {
 	return &CadesProcess{Cmd: cmd, Stdout: &stdout, Stdin: &stdin}, nil
 }
 
-func NewCertManagerProcess(args ...string) (string, error) {
-	var pathMgr string
-	err_message := "Не удаётся найти файл Certmgr. Если вы установили КриптоПро не по умолчанию, создайте переменную среды CRYPTOPRO_FOLDER и укажите путь до папки КриптоПро."
+func getCryptoProUtilPath(filename string) (string, error) {
+	errMessage := fmt.Sprintf("Не удаётся найти файл %s. Если вы установили КриптоПро не по умолчанию, создайте переменную среды CRYPTOPRO_FOLDER и укажите путь до папки КриптоПро.", filename)
+	folders := []string{}
+	var result string
+	var err error
 
-	path, cryptopro_folder_set := os.LookupEnv("CRYPTOPRO_FOLDER")
+	path, cryptoProFolderSet := os.LookupEnv("CRYPTOPRO_FOLDER")
+	if cryptoProFolderSet {
+		folders = append(folders, path)
+	}
+
 	if runtime.GOOS == "linux" {
-		if cryptopro_folder_set {
-			pathMgr = fmt.Sprintf("%s/certmgr", path)
-		} else if _, err := os.Stat("/opt/cprocsp/bin/amd64/certmgr"); err == nil {
-			pathMgr = "/opt/cprocsp/bin/amd64/certmgr"
-		} else if _, err := os.Stat("/opt/cprocsp/bin/386/certmgr"); err == nil {
-			pathMgr = "/opt/cprocsp/bin/386/certmgr"
-		} else {
-			panic(err_message)
-		}
-
+		folders = append(
+			folders,
+			"/opt/cprocsp/bin/amd64",
+			"/opt/cprocsp/bin/386",
+			fmt.Sprintf("/opt/cprocsp/bin/%s", runtime.GOARCH),
+		)
 	} else {
-		if _, err := os.Stat("C:\\Program Files\\Crypto Pro\\CSP\\certmgr.exe"); err == nil {
-			pathMgr = "C:\\Program Files\\Crypto Pro\\CSP\\certmgr.exe"
-		} else if _, err := os.Stat("C:\\Program Files (x86)\\Crypto Pro\\CSP\\certmgr.exe"); err == nil {
-			pathMgr = "C:\\Program Files (x86)\\Crypto Pro\\CSP\\certmgr.exe"
-		} else if cryptopro_folder_set {
-			pathMgr = fmt.Sprintf("%s\\CSP\\certmgr.exe", path)
-		} else {
-			panic(err_message)
+		filename = fmt.Sprintf("%s.exe", filename)
+		folders = append(
+			folders,
+			"C:\\Program Files\\Crypto Pro\\CSP",
+			"C:\\Program Files (x86)\\Crypto Pro\\CSP",
+			"C:\\Program Files (x86)\\Crypto Pro\\CAdES Browser Plug-in",
+		)
+	}
+
+	for _, folder := range folders {
+		path = filepath.Join(folder, filename)
+		if _, err := os.Stat(path); err == nil {
+			result = path
+			break
+		}
+	}
+
+	if result == "" {
+		err = errors.New(errMessage)
+	}
+	return result, err
+}
+
+func removeSilentArg(args []string) []string {
+	newArgs := []string{}
+	for _, arg := range args {
+		if arg != "-silent" {
+			newArgs = append(newArgs, arg)
+			continue
+		}
+	}
+	return newArgs
+}
+
+func NewCertManagerProcess(args ...string) (string, error) {
+	pathMgr, err := getCryptoProUtilPath("certmgr")
+	if err != nil {
+		return "", err
+	}
+
+	if runtime.GOOS == "windows" {
+		ver := getWindowsVersion()
+		isWin7OrLower := ver.isWindows7OrLower()
+		if isWin7OrLower {
+			args = removeSilentArg(args)
 		}
 	}
 	cmd := exec.Command(pathMgr, args...)
@@ -163,11 +202,44 @@ func NewCertManagerProcess(args ...string) (string, error) {
 	stdoutStderr, err := cmd.CombinedOutput()
 	slog.Debug(fmt.Sprintf("CertMgr start with args: %q", cmd.Args))
 
-	d := charmap.CodePage866.NewDecoder()
-	data, errDecode := d.Bytes(stdoutStderr)
-	if errDecode != nil {
-		return "", errDecode
+	if runtime.GOOS == "windows" {
+		d := charmap.CodePage866.NewDecoder()
+		data, errDecode := d.Bytes(stdoutStderr)
+		if errDecode != nil {
+			return "", errDecode
+		}
+		stdoutStderr = data
 	}
 
-	return string(data), err
+	return string(stdoutStderr), err
+}
+
+func NewCSPTestProcess(args ...string) (string, error) {
+	pathMgr, err := getCryptoProUtilPath("csptest")
+	if err != nil {
+		return "", err
+	}
+
+	if runtime.GOOS == "windows" {
+		ver := getWindowsVersion()
+		isWin7OrLower := ver.isWindows7OrLower()
+		if isWin7OrLower {
+			args = removeSilentArg(args)
+		}
+	}
+	cmd := exec.Command(pathMgr, args...)
+
+	stdoutStderr, err := cmd.CombinedOutput()
+	slog.Debug(fmt.Sprintf("csptest start with args: %q", cmd.Args))
+
+	if runtime.GOOS == "windows" {
+		d := charmap.CodePage866.NewDecoder()
+		data, errDecode := d.Bytes(stdoutStderr)
+		if errDecode != nil {
+			return "", errDecode
+		}
+		stdoutStderr = data
+	}
+
+	return string(stdoutStderr), err
 }

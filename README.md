@@ -20,6 +20,37 @@
 	```
 - `NewCertManagerProcess(args ...string) (string, error)`
 
+
+### CadesManager
+```golang
+type CadesManager struct{}
+
+type Container struct {
+	ContainerName       string `json:"containerName"`
+	UniqueContainerName string `json:"uniqueContainerName"`
+}
+
+type InstallPfxResult struct {
+	Container  Container `json:"container"`
+	Thumbprint string    `json:"thumbprint"`
+	Output     string    `json:"output"`
+	OK         bool      `json:"ok"`
+}
+
+func (cm *CadesManager) GetContainer(partOfContainerName string) (*Container, error)
+func (cm *CadesManager) GetListOfContainers() ([]Container, error)
+func (cm *CadesManager) CopyContainer(container *Container, newLocation string) (*Container, error)
+func (cm *CadesManager) LinkCertWithContainer(certPath, containerName string) (bool, error)
+func (cm *CadesManager) DeleteCertificate(thumbprint string) (bool, error)
+func (cm *CadesManager) DeleteContainer(container *Container) (bool, error) 
+func (cm *CadesManager) IsCertificateExists(thumbprint string) (bool, error)
+func (cm *CadesManager) RenameContainer(container *Container, newContainerName string) (*Container, error)
+func (cm *CadesManager) InstallContainerFromFolder(containerFolderPath string, rootContainersFolderPath string, containerStorageName string, containerName string) (*Container, error)
+func (cm *CadesManager) InstallPfx(path string, password string, exportable bool) (*InstallPfxResult, error)
+func (cm *CadesManager) ExportContainerToPfx(filePath string, containerName string, password string) (string, error)
+```
+
+
 ### Utils
 - `GetCertificateThumbprintFromFile(path string)`
 - Методы для реализаций интерфейсов COM через NMCades
@@ -39,13 +70,6 @@
   - `CallVoidMethod(c *CadesObject, name string, params []CadesParam) error`
   - `SafeExecute[T any](ec *ErrorCollector, f func() (T, error)) T`
   - `SafeExecuteWithObject[T any](w *ErrorCollector, f func() (*T, error)) *T`
-
-### Certmgr
-- `IsCertificateExists(thumbprint string)`
-- `InstallPfx(path string, password string)`
-- `LinkCertWithContainer(certPath, containerName string)`
-- `DeleteCertificate(thumbprint string)`
-- `DeleteContainer(containerName string)`
 
 ### NMCades
 
