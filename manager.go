@@ -194,6 +194,7 @@ func (cm *CadesManager) GetContainer(partOfContainerName string) (*Container, er
 
 func (cm *CadesManager) CopyContainer(container *Container, newLocation string) (*Container, error) {
 	result := &Container{}
+	var containerExists bool
 	output, err := NewCSPTestProcess("-keycopy", "-contsrc", container.UniqueContainerName, "-contdest", newLocation, "-silent")
 	if err != nil {
 		if !strings.Contains(output, "ErrorCode: 0x8009000f") {
@@ -202,11 +203,20 @@ func (cm *CadesManager) CopyContainer(container *Container, newLocation string) 
 			return result, err
 		}
 
+		containerExists = true
 		slog.Debug(fmt.Sprintf("Container[%s] exists", newLocation))
 	}
 
 	result, err = cm.GetContainer(newLocation)
-	return result, err
+	if err != nil {
+		return result, err
+	}
+
+	if containerExists {
+		return result, ErrContainerExists
+	}
+
+	return result, nil
 }
 
 func (cm *CadesManager) InstallContainerFromFolder(containerFolderPath string, rootContainersFolderPath string, containerStorageName string, containerName string) (*Container, error) {
