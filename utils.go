@@ -56,7 +56,34 @@ func GetProperty[T any](c *CadesObject, name string) (T, error) {
 			RequestId:   c.Cades.RequestId,
 			ObjId:       c.ObjId,
 			Destination: "nmcades",
-			Property:    name,
+			GetProperty: name,
+		},
+	}
+
+	data, err := c.Cades.SendRequest(body)
+	if err != nil {
+		return defaultValue, err
+
+	}
+
+	value, ok := data.ReturnValue.Value.(T)
+	if ok {
+		return value, nil
+	}
+
+	return defaultValue, ErrEmpty
+}
+
+func SetProperty[T any](c *CadesObject, name string, params []CadesParam) (T, error) {
+	defaultValue := DefaultTypeValue[T]{}.Value
+	body := &CadesRequestBody{
+		Tabid: c.Cades.Id,
+		Data: &CadesRequestData{
+			RequestId:   c.Cades.RequestId,
+			ObjId:       c.ObjId,
+			Destination: "nmcades",
+			SetProperty: name,
+			Params:      params,
 		},
 	}
 
@@ -82,7 +109,7 @@ func GetPropertyWithObject(c *CadesObject, name string) (*CadesObject, error) {
 			RequestId:   c.Cades.RequestId,
 			ObjId:       c.ObjId,
 			Destination: "nmcades",
-			Property:    name,
+			GetProperty: name,
 		},
 	}
 

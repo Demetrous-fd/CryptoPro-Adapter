@@ -24,7 +24,9 @@ type CadesRequestData struct {
 	Type        string       `json:"type,omitempty"`
 	Value       string       `json:"value,omitempty"`
 	Method      string       `json:"method,omitempty"`
-	Property    string       `json:"get_property,omitempty"`
+	Property    string       `json:"get_property,omitempty"` // Backward compatibility
+	GetProperty string       `json:"set_property,omitempty"`
+	SetProperty string       `json:"set_property,omitempty"`
 	Url         string       `json:"url,omitempty"`
 	Params      []CadesParam `json:"params,omitempty"`
 }
