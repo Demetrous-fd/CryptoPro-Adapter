@@ -24,6 +24,9 @@ func ValueToParam(value any) *CadesParam {
 		paramValue = DateToUTCStr(d)
 	} else if _, ok := value.(bool); ok {
 		paramType = "boolean"
+	} else if cObj, ok := value.(CadesObject); ok {
+		paramType = "object"
+		paramValue = cObj.ObjId
 	} else {
 		paramType = "number"
 	}
