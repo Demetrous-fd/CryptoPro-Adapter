@@ -74,8 +74,8 @@ func GetProperty[T any](c *CadesObject, name string) (T, error) {
 	return defaultValue, ErrEmpty
 }
 
-func SetProperty[T any](c *CadesObject, name string, params []CadesParam) (T, error) {
-	defaultValue := DefaultTypeValue[T]{}.Value
+func SetProperty(c *CadesObject, name string, params []CadesParam) (bool, error) {
+	defaultValue := false
 	body := &CadesRequestBody{
 		Tabid: c.Cades.Id,
 		Data: &CadesRequestData{
@@ -93,9 +93,9 @@ func SetProperty[T any](c *CadesObject, name string, params []CadesParam) (T, er
 
 	}
 
-	value, ok := data.ReturnValue.Value.(T)
+	result, ok := data.ReturnValue.Value.(string)
 	if ok {
-		return value, nil
+		return result == "OK", nil
 	}
 
 	return defaultValue, ErrEmpty
