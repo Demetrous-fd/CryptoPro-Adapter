@@ -151,9 +151,9 @@ func (certificate *Certificate) ToExport() (*CertificateExport, error) {
 		}
 	}
 
-	if ec.err != nil {
-		log.Println("Certificate.ToExport error: ", ec.err)
-		return &export, ec.err
+	if ec.Error != nil {
+		log.Println("Certificate.ToExport error: ", ec.Error)
+		return &export, ec.Error
 	}
 	return &export, nil
 }

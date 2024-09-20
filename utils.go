@@ -164,32 +164,30 @@ func CallVoidMethod(c *CadesObject, name string, params []CadesParam) error {
 }
 
 type ErrorCollector struct {
-	err error
+	Error error
 }
 
 func SafeExecuteVoid(ec *ErrorCollector, f func() error) {
-	if ec.err != nil {
+	if ec.Error != nil {
 		return
 	}
 
 	err := f()
 	if err != nil {
-		ec.err = err
+		ec.Error = err
 		return
 	}
-
-	return
 }
 
 func SafeExecute[T any](ec *ErrorCollector, f func() (T, error)) T {
 	defaultValue := DefaultTypeValue[T]{}.Value
-	if ec.err != nil {
+	if ec.Error != nil {
 		return defaultValue
 	}
 
 	value, err := f()
 	if err != nil {
-		ec.err = err
+		ec.Error = err
 		return value
 	}
 
@@ -198,13 +196,13 @@ func SafeExecute[T any](ec *ErrorCollector, f func() (T, error)) T {
 
 func SafeExecuteWithObject[T any](w *ErrorCollector, f func() (*T, error)) *T {
 	defaultValue := DefaultTypeValue[T]{}.Value
-	if w.err != nil {
+	if w.Error != nil {
 		return &defaultValue
 	}
 
 	value, err := f()
 	if err != nil {
-		w.err = err
+		w.Error = err
 		return value
 	}
 
