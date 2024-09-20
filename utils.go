@@ -167,6 +167,20 @@ type ErrorCollector struct {
 	err error
 }
 
+func SafeExecuteVoid(ec *ErrorCollector, f func() error) {
+	if ec.err != nil {
+		return
+	}
+
+	err := f()
+	if err != nil {
+		ec.err = err
+		return
+	}
+
+	return
+}
+
 func SafeExecute[T any](ec *ErrorCollector, f func() (T, error)) T {
 	defaultValue := DefaultTypeValue[T]{}.Value
 	if ec.err != nil {
