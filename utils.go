@@ -60,15 +60,14 @@ func GetProperty[T any](c *CadesObject, name string) (T, error) {
 			ObjId:       c.ObjId,
 			Destination: "nmcades",
 			GetProperty: name,
+			// Property:    name,
 		},
 	}
-
 	data, err := c.Cades.SendRequest(body)
 	if err != nil {
 		return defaultValue, err
 
 	}
-
 	value, ok := data.ReturnValue.Value.(T)
 	if ok {
 		return value, nil
