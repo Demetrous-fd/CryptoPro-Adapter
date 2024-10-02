@@ -284,6 +284,11 @@ func (cm *CadesManager) RenameContainer(container *Container, newContainerName s
 		return result, err
 	}
 
+	if result.ContainerName == container.ContainerName || result.UniqueContainerName == container.UniqueContainerName {
+		slog.Debug(fmt.Sprintf("RenameContainer: The new container name matches the old one. OLD[%s] = NEW[%s]", container.ContainerName, location))
+		return container, nil
+	}
+
 	_, err = cm.DeleteContainer(container)
 	if err != nil {
 		slog.Debug(fmt.Sprintf("RenameContainer: Cant delete old container: %s", container.ContainerName))
