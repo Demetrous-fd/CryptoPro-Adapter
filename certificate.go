@@ -30,6 +30,38 @@ type CertificateExport struct {
 	PrivateKey    PrivateKeyExport `json:"privateKey,omitempty"`
 }
 
+func NewCertificate(cades *Cades) (*Certificate, error) {
+	body := &CadesRequestBody{
+		Tabid: cades.Id,
+		Data: &CadesRequestData{
+			RequestId:   cades.RequestId,
+			Destination: "nmcades",
+			Method:      "CreateObject",
+			Params: []CadesParam{
+				{Type: "string", Value: "CAdESCOM.Certificate"},
+			},
+		},
+	}
+
+	_, err := cades.SendRequest(body)
+
+	if err != nil {
+		return &Certificate{}, err
+	}
+
+	cades.ObjId++
+	certificate := Certificate{
+		Cades: cades,
+		ObjId: cades.ObjId,
+	}
+	return &certificate, nil
+}
+
+func (certificate *Certificate) Import(data string) error {
+	param := ValueToParam(data)
+	return CallVoidMethod((*CadesObject)(certificate), "Import", []CadesParam{*param})
+}
+
 func (certificate *Certificate) HasPrivateKey() (bool, error) {
 	data, err := CallMethod((*CadesObject)(certificate), "HasPrivateKey", []CadesParam{})
 	if err != nil {

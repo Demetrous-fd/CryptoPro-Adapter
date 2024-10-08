@@ -230,31 +230,3 @@ func (cades *Cades) sendRequestToProcess(request []byte) (*CadesResponseBody, er
 	cades.RequestId++
 	return &answer, nil
 }
-
-func (cades *Cades) NewStore() (*Store, error) {
-	body := &CadesRequestBody{
-		Tabid: cades.Id,
-		Data: &CadesRequestData{
-			RequestId:   cades.RequestId,
-			ObjId:       cades.ObjId,
-			Destination: "nmcades",
-			Method:      "CreateObject",
-			Params: []CadesParam{
-				{Type: "string", Value: "CAdESCOM.Store"},
-			},
-		},
-	}
-
-	_, err := cades.SendRequest(body)
-
-	if err != nil {
-		return &Store{}, err
-	}
-
-	cades.ObjId++
-	store := Store{
-		Cades: cades,
-		ObjId: cades.ObjId,
-	}
-	return &store, nil
-}

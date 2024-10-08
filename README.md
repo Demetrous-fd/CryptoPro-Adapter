@@ -148,13 +148,6 @@ type CadesObject struct {
   - `(cades *Cades) SendRequest(request *CadesRequestBody) (*CadesResponseData, error)`
   - `(cades *Cades) Close()`
 
-#### Реализованы некоторые [интерфейсы COM](https://docs.cryptopro.ru/cades/reference/cadescom?id=Интерфейс-com):
-
-- `(cades *Cades) NewStore() (*Store, error)`
-  - `(store *Store) Open(args ...any) error`
-  - `(store *Store) Close() error`
-  - `(store *Store) Certificates() (*Certificates, error)`
-
 #### Пример использования nmcades
 
 ```golang
@@ -174,7 +167,7 @@ func getCertificate(thumbprint string) (*cades.Certificate, error) {
 		return &defaultValue, err
 	}
 
-	store, err := cadesObj.NewStore()
+	store, err := NewStore(cadesObj)
 	if err != nil {
 		log.Println("Fail to create a store object", err)
 		return &defaultValue, err
