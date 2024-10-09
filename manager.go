@@ -121,8 +121,13 @@ func (cm *CadesManager) DeleteContainer(container *Container) (bool, error) {
 	return false, nil
 }
 
-func (cm *CadesManager) IsCertificateExists(thumbprint string) (bool, error) {
-	output, err := NewCertManagerProcess("-list", "-thumbprint", thumbprint)
+func (cm *CadesManager) IsCertificateExists(thumbprint string, store string) (bool, error) {
+	args := []string{"-list", "-thumbprint", thumbprint}
+	if store != "" {
+		args = append(args, "-store", store)
+	}
+
+	output, err := NewCertManagerProcess(args...)
 	if err != nil {
 		slog.Debug(fmt.Sprintf("Fail to find certificate by thumbprint: %s", thumbprint))
 		slog.Debug(fmt.Sprintf("Output log: %s", output))
