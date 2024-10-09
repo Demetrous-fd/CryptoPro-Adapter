@@ -7,7 +7,6 @@ func NewStore(cades *Cades) (*Store, error) {
 		Tabid: cades.Id,
 		Data: &CadesRequestData{
 			RequestId:   cades.RequestId,
-			ObjId:       cades.ObjId,
 			Destination: "nmcades",
 			Method:      "CreateObject",
 			Params: []CadesParam{
