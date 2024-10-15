@@ -48,6 +48,7 @@ func (cm *CadesManager) RenameContainer(container *Container, newContainerName s
 func (cm *CadesManager) InstallContainerFromFolder(containerFolderPath string, rootContainersFolderPath string, containerStorageName string, containerName string) (*Container, error)
 func (cm *CadesManager) InstallPfx(path string, password string, exportable bool) (*InstallPfxResult, error)
 func (cm *CadesManager) ExportContainerToPfx(filePath string, containerName string, password string) (string, error)
+func (cm *CadesManager) InstallCertificate(filePath string, storeName string) error
 ```
 
 

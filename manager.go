@@ -317,3 +317,23 @@ func (cm *CadesManager) ExportContainerToPfx(filePath string, containerName stri
 
 	return filePath, nil
 }
+
+func (cm *CadesManager) InstallCertificate(filePath string, storeName string) error {
+	var args []string = []string{"-inst", "-file", filePath}
+	if storeName != "" {
+		args = append(args, "-store", storeName)
+	}
+
+	output, err := NewCertManagerProcess(args...)
+	if err != nil {
+		if storeName == "" {
+			slog.Debug(fmt.Sprintf("Fail to install certificate[%s] to default store, error: %s", filePath, err))
+		} else {
+			slog.Debug(fmt.Sprintf("Fail to install certificate[%s] to store[%s], error: %s", filePath, storeName, err))
+		}
+		slog.Debug(fmt.Sprintf("Certmgr log: %s", output))
+		return err
+	}
+
+	return nil
+}
