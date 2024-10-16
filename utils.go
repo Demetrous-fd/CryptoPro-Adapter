@@ -209,13 +209,7 @@ func SafeExecuteWithObject[T any](w *ErrorCollector, f func() (*T, error)) *T {
 	return value
 }
 
-func GetCertificateThumbprintFromFile(path string) (string, error) {
-	// read file content
-	data, err := os.ReadFile(path)
-	if err != nil {
-		return "", err
-	}
-
+func GetCertificateThumbprint(data []byte) (string, error) {
 	// pass cert bytes
 	cert, err := x509.ParseCertificate(data)
 	if err != nil {
@@ -232,4 +226,14 @@ func GetCertificateThumbprintFromFile(path string) (string, error) {
 	}
 	thumbprint := strings.ToLower(buf.String())
 	return thumbprint, nil
+}
+
+func GetCertificateThumbprintFromFile(path string) (string, error) {
+	// read file content
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return "", err
+	}
+
+	return GetCertificateThumbprint(data)
 }
