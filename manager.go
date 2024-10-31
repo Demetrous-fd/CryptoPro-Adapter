@@ -202,8 +202,10 @@ func (cm *CadesManager) CopyContainer(container *Container, newLocation string) 
 	var containerExists bool
 	output, err := NewCSPTestProcess("-keycopy", "-contsrc", container.UniqueContainerName, "-contdest", newLocation, "-silent")
 	if err != nil {
-		if !strings.Contains(output, "ErrorCode: 0x8009000f") {
-			slog.Debug("Fail to get list of containers")
+		if strings.Contains(output, "ErrorCode: 0x8009000b") {
+			slog.Debug(fmt.Sprintf("Output log: %s", output))
+			return result, ErrContainerNotExportable
+		} else if !strings.Contains(output, "ErrorCode: 0x8009000f") {
 			slog.Debug(fmt.Sprintf("Output log: %s", output))
 			return result, err
 		}
