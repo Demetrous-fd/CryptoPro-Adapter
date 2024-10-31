@@ -314,6 +314,9 @@ func (cm *CadesManager) ExportContainerToPfx(filePath string, containerName stri
 	if err != nil {
 		slog.Debug(fmt.Sprintf("Fail to export container[%s] to pfx[%s], error: %s", containerName, filePath, err))
 		slog.Debug(fmt.Sprintf("Certmgr log: %s", output))
+		if strings.Contains(output, "ErrorCode: 0x8009000b") {
+			return "", ErrContainerNotExportable
+		}
 		return "", err
 	}
 
