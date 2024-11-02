@@ -584,3 +584,109 @@ func (x509 *X509EnrollmentRoot) CX500DistinguishedName() (*CX500DistinguishedNam
 	}
 	return &dn, nil
 }
+
+type CX509ExtensionAlternativeNames CadesObject
+
+func (x509 *X509EnrollmentRoot) CX509ExtensionAlternativeNames() (*CX509ExtensionAlternativeNames, error) {
+	body := &CadesRequestBody{
+		Tabid: x509.Cades.Id,
+		Data: &CadesRequestData{
+			RequestId:   x509.Cades.RequestId,
+			Destination: "nmcades",
+			Method:      "CreateObject",
+			Params: []CadesParam{
+				{Type: "string", Value: "CX509ExtensionAlternativeNames"},
+			},
+		},
+	}
+
+	_, err := x509.Cades.SendRequest(body)
+
+	if err != nil {
+		return &CX509ExtensionAlternativeNames{}, err
+	}
+
+	x509.Cades.ObjId++
+	ean := CX509ExtensionAlternativeNames{
+		Cades: x509.Cades,
+		ObjId: x509.Cades.ObjId,
+	}
+	return &ean, nil
+}
+
+func (ean *CX509ExtensionAlternativeNames) InitializeEncode(obj *CAlternativeNames) error {
+	param := ValueToParam(*(*CadesObject)(obj))
+	return CallVoidMethod((*CadesObject)(ean), "InitializeEncode", []CadesParam{*param})
+}
+
+type CAlternativeNames CadesObject
+
+func (x509 *X509EnrollmentRoot) CAlternativeNames() (*CAlternativeNames, error) {
+	body := &CadesRequestBody{
+		Tabid: x509.Cades.Id,
+		Data: &CadesRequestData{
+			RequestId:   x509.Cades.RequestId,
+			Destination: "nmcades",
+			Method:      "CreateObject",
+			Params: []CadesParam{
+				{Type: "string", Value: "CAlternativeNames"},
+			},
+		},
+	}
+
+	_, err := x509.Cades.SendRequest(body)
+
+	if err != nil {
+		return &CAlternativeNames{}, err
+	}
+
+	x509.Cades.ObjId++
+	altNames := CAlternativeNames{
+		Cades: x509.Cades,
+		ObjId: x509.Cades.ObjId,
+	}
+	return &altNames, nil
+}
+
+func (altNames *CAlternativeNames) Add(obj *CAlternativeName) error {
+	param := ValueToParam(*(*CadesObject)(obj))
+	return CallVoidMethod((*CadesObject)(altNames), "Add", []CadesParam{*param})
+}
+
+type CAlternativeName CadesObject
+
+func (x509 *X509EnrollmentRoot) CAlternativeName() (*CAlternativeName, error) {
+	body := &CadesRequestBody{
+		Tabid: x509.Cades.Id,
+		Data: &CadesRequestData{
+			RequestId:   x509.Cades.RequestId,
+			Destination: "nmcades",
+			Method:      "CreateObject",
+			Params: []CadesParam{
+				{Type: "string", Value: "CAlternativeName"},
+			},
+		},
+	}
+
+	_, err := x509.Cades.SendRequest(body)
+
+	if err != nil {
+		return &CAlternativeName{}, err
+	}
+
+	x509.Cades.ObjId++
+	altName := CAlternativeName{
+		Cades: x509.Cades,
+		ObjId: x509.Cades.ObjId,
+	}
+	return &altName, nil
+}
+
+func (altName *CAlternativeName) InitializeFromOtherName(obj *CObjectId, args ...any) error {
+	param := ValueToParam(*(*CadesObject)(obj))
+	params := ArgumentsToParams(3, args)
+
+	allParams := []CadesParam{*param}
+	allParams = append(allParams, params...)
+	return CallVoidMethod((*CadesObject)(altName), "InitializeFromOtherName", allParams)
+}
