@@ -595,7 +595,7 @@ func (x509 *X509EnrollmentRoot) CX509ExtensionAlternativeNames() (*CX509Extensio
 			Destination: "nmcades",
 			Method:      "CreateObject",
 			Params: []CadesParam{
-				{Type: "string", Value: "CX509ExtensionAlternativeNames"},
+				{Type: "string", Value: "X509Enrollment.CX509ExtensionAlternativeNames"},
 			},
 		},
 	}
@@ -629,7 +629,7 @@ func (x509 *X509EnrollmentRoot) CAlternativeNames() (*CAlternativeNames, error) 
 			Destination: "nmcades",
 			Method:      "CreateObject",
 			Params: []CadesParam{
-				{Type: "string", Value: "CAlternativeNames"},
+				{Type: "string", Value: "X509Enrollment.CAlternativeNames"},
 			},
 		},
 	}
@@ -663,7 +663,7 @@ func (x509 *X509EnrollmentRoot) CAlternativeName() (*CAlternativeName, error) {
 			Destination: "nmcades",
 			Method:      "CreateObject",
 			Params: []CadesParam{
-				{Type: "string", Value: "CAlternativeName"},
+				{Type: "string", Value: "X509Enrollment.CAlternativeName"},
 			},
 		},
 	}
