@@ -4,17 +4,17 @@
 package cades
 
 // Version contains data about a Windows version
-type Version struct {
+type WinVersion struct {
 	Major uint8
 	Minor uint8
 	Build uint16
 }
 
-func (v Version) isWindows7OrLower() bool {
+func (v WinVersion) isWindows7OrLower() bool {
 	return false
 }
 
-func getWindowsVersion() Version {
-	ver := Version{}
+func getWindowsVersion() WinVersion {
+	ver := WinVersion{}
 	return ver
 }

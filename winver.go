@@ -10,19 +10,19 @@ import (
 )
 
 // Version contains data about a Windows version
-type Version struct {
+type WinVersion struct {
 	Major uint8
 	Minor uint8
 	Build uint16
 }
 
-func (v Version) isWindows7OrLower() bool {
+func (v WinVersion) isWindows7OrLower() bool {
 	return v.Major <= 6 && v.Minor <= 1
 }
 
-func getWindowsVersion() Version {
+func getWindowsVersion() WinVersion {
 	v, _ := syscall.GetVersion()
-	ver := Version{
+	ver := WinVersion{
 		Major: byte(v),
 		Minor: uint8(v >> 8),
 		Build: uint16(v >> 16),
