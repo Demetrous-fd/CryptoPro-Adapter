@@ -101,3 +101,81 @@ func (version *Version) ToString() (string, error) {
 
 	return "", ErrEmpty
 }
+
+type CadesVersion struct {
+	Major int
+	Minor int
+	Build int
+}
+
+func GetCadesVersion(c *Cades) (CadesVersion, error) {
+	var version CadesVersion
+	about, err := NewAbout(c)
+	if err != nil {
+		return version, err
+	}
+
+	csp, err := about.CSPVersion()
+	if err != nil {
+		return version, err
+	}
+
+	major, err := csp.MajorVersion()
+	if err != nil {
+		return version, err
+	}
+
+	minor, err := csp.MinorVersion()
+	if err != nil {
+		return version, err
+	}
+
+	build, err := csp.BuildVersion()
+	if err != nil {
+		return version, err
+	}
+
+	version.Major = major
+	version.Minor = minor
+	version.Build = build
+	return version, nil
+}
+
+type PluginVersion struct {
+	Major int
+	Minor int
+	Build int
+}
+
+func GetPluginVersion(c *Cades) (PluginVersion, error) {
+	var version PluginVersion
+	about, err := NewAbout(c)
+	if err != nil {
+		return version, err
+	}
+
+	plugin, err := about.PluginVersion()
+	if err != nil {
+		return version, err
+	}
+
+	major, err := plugin.MajorVersion()
+	if err != nil {
+		return version, err
+	}
+
+	minor, err := plugin.MinorVersion()
+	if err != nil {
+		return version, err
+	}
+
+	build, err := plugin.BuildVersion()
+	if err != nil {
+		return version, err
+	}
+
+	version.Major = major
+	version.Minor = minor
+	version.Build = build
+	return version, nil
+}
