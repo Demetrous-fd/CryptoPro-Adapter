@@ -58,6 +58,20 @@ func (about *About) PluginVersion() (*Version, error) {
 	return (*Version)(obj), err
 }
 
+func (about *About) CSPVersion() (*Version, error) {
+	_, err := CallMethod((*CadesObject)(about), "CSPVersion", []CadesParam{})
+	if err != nil {
+		return &Version{}, err
+	}
+
+	about.Cades.ObjId++
+	version := Version{
+		Cades: about.Cades,
+		ObjId: about.Cades.ObjId,
+	}
+	return &version, nil
+}
+
 type Version CadesObject
 
 func (version *Version) MajorVersion() (int, error) {
