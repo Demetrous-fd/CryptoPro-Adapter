@@ -323,10 +323,14 @@ func (cm *CadesManager) ExportContainerToPfx(filePath string, containerName stri
 	return filePath, nil
 }
 
-func (cm *CadesManager) InstallCertificate(filePath string, storeName string) error {
+func (cm *CadesManager) InstallCertificate(filePath string, storeName string, autoDist bool) error {
 	var args []string = []string{"-inst", "-file", filePath}
 	if storeName != "" {
 		args = append(args, "-store", storeName)
+	}
+
+	if autoDist {
+		args = append(args, "-autodist")
 	}
 
 	output, err := NewCertManagerProcess(args...)
