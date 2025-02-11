@@ -346,3 +346,14 @@ func (cm *CadesManager) InstallCertificate(filePath string, storeName string, au
 
 	return nil
 }
+
+func (cm *CadesManager) GetCSPInfo() (string, error) {
+	output, err := NewCSPTestProcess("-keyset", "-verifycontext")
+
+	if err != nil {
+		slog.Debug(fmt.Sprintf("GetCSPInfo Error: %s", err))
+		return output, err
+	}
+
+	return output, nil
+}

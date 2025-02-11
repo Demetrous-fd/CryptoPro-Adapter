@@ -49,6 +49,7 @@ func (cm *CadesManager) InstallContainerFromFolder(containerFolderPath string, r
 func (cm *CadesManager) InstallPfx(path string, password string, exportable bool) (*InstallPfxResult, error)
 func (cm *CadesManager) ExportContainerToPfx(filePath string, containerName string, password string) (string, error)
 func (cm *CadesManager) InstallCertificate(filePath string, storeName string, autoDist bool) error
+func (cm *CadesManager) GetCSPInfo() (string, error)
 ```
 
 
