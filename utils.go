@@ -1,12 +1,12 @@
 package cades
 
 import (
-	"bytes"
 	"crypto/sha1"
 	"crypto/x509"
-	"fmt"
+	"encoding/asn1"
+	"encoding/hex"
+	"encoding/pem"
 	"os"
-	"strings"
 	"time"
 )
 
@@ -209,31 +209,85 @@ func SafeExecuteWithObject[T any](w *ErrorCollector, f func() (*T, error)) *T {
 	return value
 }
 
+func LoadCertificate(data []byte) (*x509.Certificate, error) {
+	certRaw := data
+	block, _ := pem.Decode(certRaw)
+	if block != nil {
+		certRaw = block.Bytes
+	}
+
+	certificate, err := x509.ParseCertificate(certRaw)
+	if err != nil {
+		return certificate, err
+	}
+	return certificate, nil
+}
+
+func GetThumbprint(certificate *x509.Certificate) string {
+	fingerprintRaw := sha1.Sum(certificate.Raw)
+	thumbprint := hex.EncodeToString(fingerprintRaw[:])
+	return thumbprint
+}
+
 func GetCertificateThumbprint(data []byte) (string, error) {
-	// pass cert bytes
-	cert, err := x509.ParseCertificate(data)
+	cert, err := LoadCertificate(data)
 	if err != nil {
 		return "", err
 	}
 
-	// generate fingerprint with sha1
-	// you can also use md5, sha256, etc.
-	fingerprint := sha1.Sum(cert.Raw)
-
-	var buf bytes.Buffer
-	for _, f := range fingerprint {
-		fmt.Fprintf(&buf, "%02X", f)
-	}
-	thumbprint := strings.ToLower(buf.String())
+	thumbprint := GetThumbprint(cert)
 	return thumbprint, nil
 }
 
 func GetCertificateThumbprintFromFile(path string) (string, error) {
-	// read file content
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return "", err
 	}
 
 	return GetCertificateThumbprint(data)
+}
+
+type AlgorithmInfoAsn1 struct {
+	AlgorithmOID  asn1.ObjectIdentifier
+	ParameterOIDs []asn1.ObjectIdentifier
+}
+
+type SubjectPublicKeyInfoAsn1 struct {
+	AlgorithmInfo AlgorithmInfoAsn1
+	PublicKey     asn1.BitString
+}
+
+func ParseSubjectPublicKeyInfo(cert *x509.Certificate) (*SubjectPublicKeyInfoAsn1, error) {
+	var publicKeyInfo SubjectPublicKeyInfoAsn1
+
+	_, err := asn1.Unmarshal(cert.RawSubjectPublicKeyInfo, &publicKeyInfo)
+	return &publicKeyInfo, err
+}
+
+func GetCertificateShortPublicKey(publicKeyInfo *SubjectPublicKeyInfoAsn1) string {
+	var shortPublicKey []byte
+
+	publicKey := publicKeyInfo.PublicKey.Bytes
+	switch publicKey[1] {
+	case 0x40:
+		shortPublicKey = publicKey[2 : 8+2]
+	case 0x81:
+		shortPublicKey = publicKey[3 : 8+3]
+	default:
+		shortPublicKey = publicKey[:8]
+	}
+
+	return hex.EncodeToString(shortPublicKey)
+}
+
+func GetShortPublicKeyFromPrivateKey(headerData []byte) string {
+	var shortPublicKey []byte
+	for i := 0; i < len(headerData)-1; i++ {
+		if headerData[i] == 0x8a && headerData[i+1] == 0x08 {
+			shortPublicKey = headerData[i+2 : i+10]
+			break
+		}
+	}
+	return hex.EncodeToString(shortPublicKey)
 }

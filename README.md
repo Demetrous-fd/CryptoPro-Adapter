@@ -54,7 +54,18 @@ func (cm *CadesManager) GetCSPInfo() (string, error)
 
 
 ### Utils
-- `GetCertificateThumbprintFromFile(path string)`
+- Методы для получения Отпечатока SHA1 из сертификата
+  ```golang
+  GetCertificateThumbprintFromFile(path string) (string, error)
+  GetCertificateThumbprint(data []byte) (string, error)
+  GetThumbprint(certificate *x509.Certificate) string
+  ```
+- Методы для получения первых 8 байт открытого ключа из сертификата и контейнера
+  ```golang
+  ParseSubjectPublicKeyInfo(cert *x509.Certificate) (*SubjectPublicKeyInfoAsn1, error)
+  GetCertificateShortPublicKey(publicKeyInfo *SubjectPublicKeyInfoAsn1) string
+  GetShortPublicKeyFromPrivateKey(headerData []byte) string
+  ```
 - Методы для реализаций интерфейсов COM через NMCades
   ```golang
     type DefaultTypeValue[T any] struct {
