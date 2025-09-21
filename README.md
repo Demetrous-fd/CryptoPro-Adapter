@@ -60,11 +60,41 @@ func (cm *CadesManager) GetCSPInfo() (string, error)
   GetCertificateThumbprint(data []byte) (string, error)
   GetThumbprint(certificate *x509.Certificate) string
   ```
+- Метод для получения открытого ключа из сертификата
+  ```golang
+  GetCertificatePublicKey(publicKeyInfo *SubjectPublicKeyInfoAsn1) string
+  ```
 - Методы для получения первых 8 байт открытого ключа из сертификата и контейнера
   ```golang
   ParseSubjectPublicKeyInfo(cert *x509.Certificate) (*SubjectPublicKeyInfoAsn1, error)
   GetCertificateShortPublicKey(publicKeyInfo *SubjectPublicKeyInfoAsn1) string
   GetShortPublicKeyFromPrivateKey(headerData []byte) string
+  ```
+- Метод для создания нового имени ключевого носителя (name.key)
+  ```golang
+  NewPrivateKeyName(cp1251Name string) []byte
+  ```
+- Метод для парсинга сертификата
+  ```golang
+  type AlgorithmInfo struct {
+  	OID        string   `json:"oid"`
+  	Name       string   `json:"name"`
+  	Parameters []string `json:"parameters"`
+  }
+
+  type GostCertificate struct {
+	Issuer         map[string]string `json:"issuer"`
+	Subject        map[string]string `json:"subject"`
+	SerialNumber   string            `json:"serial_number"`
+	Thumbprint     string            `json:"thumbprint"`
+	PublicKey      string            `json:"public_key"`
+	ShortPublicKey string            `json:"short_public_key"`
+	Algorithm      AlgorithmInfo     `json:"algorithm"`
+	NotAfter       time.Time         `json:"not_after"`
+	NotBefore      time.Time         `json:"not_before"`
+  }
+
+  ParseGostCertificate(x509Certificate *x509.Certificate) (*GostCertificate, error)
   ```
 - Методы для реализаций интерфейсов COM через NMCades
   ```golang
