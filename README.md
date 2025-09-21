@@ -56,23 +56,23 @@ func (cm *CadesManager) GetCSPInfo() (string, error)
 ### Utils
 - Методы для получения Отпечатока SHA1 из сертификата
   ```golang
-  GetCertificateThumbprintFromFile(path string) (string, error)
-  GetCertificateThumbprint(data []byte) (string, error)
-  GetThumbprint(certificate *x509.Certificate) string
+  func GetCertificateThumbprintFromFile(path string) (string, error)
+  func GetCertificateThumbprint(data []byte) (string, error)
+  func GetThumbprint(certificate *x509.Certificate) string
   ```
 - Метод для получения открытого ключа из сертификата
   ```golang
-  GetCertificatePublicKey(publicKeyInfo *SubjectPublicKeyInfoAsn1) string
+  func GetCertificatePublicKey(publicKeyInfo *SubjectPublicKeyInfoAsn1) string
   ```
 - Методы для получения первых 8 байт открытого ключа из сертификата и контейнера
   ```golang
-  ParseSubjectPublicKeyInfo(cert *x509.Certificate) (*SubjectPublicKeyInfoAsn1, error)
-  GetCertificateShortPublicKey(publicKeyInfo *SubjectPublicKeyInfoAsn1) string
-  GetShortPublicKeyFromPrivateKey(headerData []byte) string
+  func ParseSubjectPublicKeyInfo(cert *x509.Certificate) (*SubjectPublicKeyInfoAsn1, error)
+  func GetCertificateShortPublicKey(publicKeyInfo *SubjectPublicKeyInfoAsn1) string
+  func GetShortPublicKeyFromPrivateKey(headerData []byte) string
   ```
 - Метод для создания нового имени ключевого носителя (name.key)
   ```golang
-  NewPrivateKeyName(cp1251Name string) []byte
+  func NewPrivateKeyName(cp1251Name string) []byte
   ```
 - Метод для парсинга сертификата
   ```golang
@@ -94,7 +94,7 @@ func (cm *CadesManager) GetCSPInfo() (string, error)
 	NotBefore      time.Time         `json:"not_before"`
   }
 
-  ParseGostCertificate(x509Certificate *x509.Certificate) (*GostCertificate, error)
+  func ParseGostCertificate(x509Certificate *x509.Certificate) (*GostCertificate, error)
   ```
 - Методы для реализаций интерфейсов COM через NMCades
   ```golang
