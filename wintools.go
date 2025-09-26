@@ -92,6 +92,7 @@ func renameRegistryKey(oldPath string, newPath string) error {
 	return nil
 }
 
+// containerName - имя контейнера, без пути \\.\(REGISTRY|HDIMAGE|FAT12) и т.д.
 func DirectRenameContainerRegistry(userSid string, containerName string, newNameInCP1251 string) (bool, error) {
 	var keysPath string
 	if runtime.GOARCH == "386" {

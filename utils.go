@@ -473,6 +473,7 @@ func DirectRenameContainerFolder(path string, newNameInCP1251 string) (bool, err
 	return true, nil
 }
 
+// uniqueContainerName -> \\.\HDIMAGE\HDIMAGE\\abcd1234.000\0000
 func DirectRenameContainerHDImage(username string, uniqueContainerName string, newNameInCP1251 string) (bool, error) {
 	// HDIMAGE
 	// Linux: /var/opt/cprocsp/keys/<username>

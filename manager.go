@@ -270,8 +270,6 @@ func (cm *CadesManager) InstallContainerFromFolder(containerFolderPath string, r
 }
 
 func (cm *CadesManager) RenameContainer(container *Container, newContainerName string) (*Container, error) {
-	result := &Container{}
-
 	containerStorageName := strings.ReplaceAll(container.ContainerName, `\\.\`, "")
 	containerStorageName = strings.Split(containerStorageName, `\`)[0]
 

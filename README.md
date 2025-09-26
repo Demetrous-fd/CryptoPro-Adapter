@@ -74,6 +74,14 @@ func (cm *CadesManager) GetCSPInfo() (string, error)
   ```golang
   func NewPrivateKeyName(cp1251Name string) []byte
   ```
+- Методы для прямого переименования контейнера
+  ```golang
+  func DirectRenameContainerFolder(path string, newNameInCP1251 string) (bool, error)
+  func DirectRenameContainerHDImage(username string, uniqueContainerName string, newNameInCP1251 string) (bool, error)
+
+  func GetUserSid(username string) (string, error)
+  func DirectRenameContainerRegistry(userSid string, containerName string, newNameInCP1251 string) (bool, error)
+  ```
 - Метод для парсинга сертификата
   ```golang
   type AlgorithmInfo struct {
