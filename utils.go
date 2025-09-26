@@ -7,7 +7,11 @@ import (
 	"encoding/hex"
 	"encoding/pem"
 	"errors"
+	"fmt"
 	"os"
+	"path/filepath"
+	"runtime"
+	"strings"
 	"time"
 )
 
@@ -440,4 +444,51 @@ func ParseGostCertificate(x509Certificate *x509.Certificate) (*GostCertificate, 
 	fingerprint := hex.EncodeToString(fingerprintRaw[:])
 	certificate.Thumbprint = fingerprint
 	return &certificate, nil
+}
+
+func DirectRenameContainerFolder(path string, newNameInCP1251 string) (bool, error) {
+	nameKey := filepath.Join(path, "name.key")
+	oldNameKey := filepath.Join(path, "name.key.old")
+
+	if _, err := os.Stat(oldNameKey); err == nil {
+		err := os.Rename(nameKey, oldNameKey)
+		if err != nil {
+			return false, err
+		}
+	}
+
+	file, err := os.Create(nameKey)
+	if err != nil {
+		return false, err
+	}
+	defer file.Close()
+
+	nameBlock := NewPrivateKeyName(newNameInCP1251)
+
+	_, err = file.Write(nameBlock)
+	if err != nil {
+		return false, err
+	}
+
+	return true, nil
+}
+
+func DirectRenameContainerHDImage(username string, uniqueContainerName string, newNameInCP1251 string) (bool, error) {
+	// HDIMAGE
+	// Linux: /var/opt/cprocsp/keys/<username>
+	// Windows: C:\Users\<username>\AppData\Local\Crypto Pro
+	// Example: \\.\HDIMAGE\HDIMAGE\\abcd1234.000\0000
+
+	var hdImagePath string
+	if runtime.GOOS == "windows" {
+		hdImagePath = fmt.Sprintf(`C:\Users\%s\AppData\Local\Crypto Pro`, username)
+	} else {
+		hdImagePath = fmt.Sprintf(`/var/opt/cprocsp/keys/%s`, username)
+	}
+
+	containerFolderRaw := strings.Split(uniqueContainerName, `\`)
+	containerFolder := containerFolderRaw[len(containerFolderRaw)-2]
+	containerFolderPath := filepath.Join(hdImagePath, containerFolder)
+
+	return DirectRenameContainerFolder(containerFolderPath, newNameInCP1251)
 }
