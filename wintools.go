@@ -8,7 +8,6 @@ package cades
 import (
 	"fmt"
 	"os/exec"
-	"runtime"
 	"strings"
 	"syscall"
 
@@ -92,16 +91,31 @@ func renameRegistryKey(oldPath string, newPath string) error {
 	return nil
 }
 
+func getCryptoProUsersRegistryKey() (string, error) {
+	keyPath := `SOFTWARE\WOW6432Node\Crypto Pro\Settings\Users`
+	key, err := registry.OpenKey(registry.LOCAL_MACHINE, keyPath, registry.READ|registry.WRITE)
+	if err == nil {
+		defer key.Close()
+		return keyPath, nil
+	}
+
+	keyPath = `SOFTWARE\CryptoPro\Settings\Users`
+	key, err = registry.OpenKey(registry.LOCAL_MACHINE, keyPath, registry.READ|registry.WRITE)
+	if err == nil {
+		defer key.Close()
+		return keyPath, nil
+	}
+	return "", err
+}
+
 // containerName - имя контейнера, без пути \\.\(REGISTRY|HDIMAGE|FAT12) и т.д.
 func DirectRenameContainerRegistry(userSid string, containerName string, newNameInCP1251 string) (bool, error) {
-	var keysPath string
-	if runtime.GOARCH == "386" {
-		keysPath = fmt.Sprintf(`SOFTWARE\CryptoPro\Settings\Users\%s\keys`, userSid)
-	} else {
-		keysPath = fmt.Sprintf(`SOFTWARE\WOW6432Node\Crypto Pro\Settings\Users\%s\keys`, userSid)
+	keysPath, err := getCryptoProUsersRegistryKey()
+	if err != nil {
+		return false, err
 	}
-	keyPath := fmt.Sprintf(`%s\%s`, keysPath, containerName)
 
+	keyPath := fmt.Sprintf(`%s\%s\keys\%s`, keysPath, userSid, containerName)
 	key, err := registry.OpenKey(registry.LOCAL_MACHINE, keyPath, registry.READ|registry.WRITE)
 	if err != nil {
 		if err == registry.ErrNotExist {
@@ -129,7 +143,7 @@ func DirectRenameContainerRegistry(userSid string, containerName string, newName
 		return false, fmt.Errorf("cant change %s\\name.key: %s", keyPath, err)
 	}
 
-	newKeyPath := fmt.Sprintf(`%s\%s`, keysPath, newNameUtf)
+	newKeyPath := fmt.Sprintf(`%s\%s\keys\%s`, keysPath, userSid, newNameUtf)
 	err = renameRegistryKey(keyPath, newKeyPath)
 	if err != nil {
 		err = key.SetBinaryValue("name.key", oldNameBin)
