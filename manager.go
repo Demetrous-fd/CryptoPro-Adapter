@@ -121,6 +121,7 @@ func (cm *CadesManager) DeleteContainer(container *Container) (bool, error) {
 	return false, nil
 }
 
+// Optional args: store
 func (cm *CadesManager) IsCertificateExists(thumbprint string, store string) (bool, error) {
 	args := []string{"-list", "-thumbprint", thumbprint}
 	if store != "" {
@@ -131,11 +132,61 @@ func (cm *CadesManager) IsCertificateExists(thumbprint string, store string) (bo
 	if err != nil {
 		slog.Debug(fmt.Sprintf("Fail to find certificate by thumbprint: %s", thumbprint))
 		slog.Debug(fmt.Sprintf("Output log: %s", output))
+		if strings.Contains(output, "[ErrorCode: 0x8010002c]") {
+			return false, ErrCertificateNotExists
+		}
 		return false, err
 	}
 
 	result := strings.Contains(output, "[ErrorCode: 0x00000000]")
 	return result, nil
+}
+
+// Optional args: thumbprint, store
+func GetCertificatesInfo(thumbprint string, store string) ([]GostCertificate, error) {
+	result := []GostCertificate{}
+	args := []string{"-list", "-verbose"}
+	if thumbprint != "" {
+		args = append(args, "-thumbprint", thumbprint)
+	}
+
+	if store != "" {
+		args = append(args, "-store", store)
+	}
+
+	output, err := NewCertManagerProcess(args...)
+	if err != nil {
+		slog.Debug(fmt.Sprintf("Fail to find certificate by thumbprint: %s", thumbprint))
+		slog.Debug(fmt.Sprintf("Output log: %s", output))
+		if strings.Contains(output, "[ErrorCode: 0x8010002c]") {
+			return result, ErrCertificateNotExists
+		}
+		return result, err
+	}
+
+	result, err = ParseGostCertificatesFromCli(output)
+	if err != nil {
+		slog.Debug(fmt.Sprintf("Fail to parse certificate[%s]: %s", thumbprint, err.Error()))
+		return result, err
+	}
+
+	return result, err
+}
+
+func (cm *CadesManager) AbsorbCertificates(pattern string) (string, error) {
+	args := []string{"-absorb", "-certs"}
+	if pattern != "" {
+		args = append(args, "-pattern", pattern)
+	}
+
+	output, err := NewCSPTestProcess(args...)
+	if err != nil {
+		slog.Debug("Fail absorb certificates from containers")
+		slog.Debug(fmt.Sprintf("Output log: %s", output))
+		return output, err
+	}
+
+	return output, nil
 }
 
 type Container struct {

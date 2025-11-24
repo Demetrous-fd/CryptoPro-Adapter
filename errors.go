@@ -9,4 +9,5 @@ var (
 	ErrEmpty                  = errors.New("empty")
 	ErrContainerExists        = errors.New("container exists")
 	ErrContainerNotExportable = errors.New("container not exportable")
+	ErrCertificateNotExists   = errors.New("certificate not exists")
 )

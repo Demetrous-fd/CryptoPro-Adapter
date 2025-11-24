@@ -43,7 +43,9 @@ func (cm *CadesManager) CopyContainer(container *Container, newLocation string) 
 func (cm *CadesManager) LinkCertWithContainer(certPath, containerName string) (bool, error)
 func (cm *CadesManager) DeleteCertificate(thumbprint string) (bool, error)
 func (cm *CadesManager) DeleteContainer(container *Container) (bool, error) 
-func (cm *CadesManager) IsCertificateExists(thumbprint string) (bool, error)
+func (cm *CadesManager) AbsorbCertificates(pattern string) (string, error)
+func (cm *CadesManager) IsCertificateExists(thumbprint string, store string) (bool, error)
+func (cm *CadesManager) GetCertificatesInfo(thumbprint string, store string) ([]GostCertificate, error)
 func (cm *CadesManager) RenameContainer(container *Container, newContainerName string) (*Container, error)
 func (cm *CadesManager) InstallContainerFromFolder(containerFolderPath string, rootContainersFolderPath string, containerStorageName string, containerName string) (*Container, error)
 func (cm *CadesManager) InstallPfx(path string, password string, exportable bool) (*InstallPfxResult, error)
@@ -97,6 +99,8 @@ func (cm *CadesManager) GetCSPInfo() (string, error)
 	Thumbprint     string            `json:"thumbprint"`
 	PublicKey      string            `json:"public_key"`
 	ShortPublicKey string            `json:"short_public_key"`
+	Container      string            `json:"container,omitempty"`
+	ContainerLink  bool              `json:"container_link,omitempty"`
 	Algorithm      AlgorithmInfo     `json:"algorithm"`
 	NotAfter       time.Time         `json:"not_after"`
 	NotBefore      time.Time         `json:"not_before"`

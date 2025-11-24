@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"runtime"
 	"strings"
 	"time"
@@ -21,7 +22,29 @@ var GostAlgorithmNames = map[string]string{
 	"1.2.643.7.1.1.1.2": "ГОСТ Р 34.11-2012 512 бит",
 }
 
+var GostAlgorithmOIDs = map[string]string{
+	"ГОСТ Р 34.11-94 256 бит":              "1.2.643.2.2.19",
+	"ГОСТ Р 34.11-94/34.10-2001 256 бит":   "1.2.643.2.2.19",
+	"ГОСТ Р 34.11-2012 256 бит":            "1.2.643.7.1.1.1.1",
+	"ГОСТ Р 34.11-2012/34.10-2012 256 бит": "1.2.643.7.1.1.1.1",
+	"ГОСТ Р 34.11-2012 512 бит":            "1.2.643.7.1.1.1.2",
+	"ГОСТ Р 34.11-2012/34.10-2012 512 бит": "1.2.643.7.1.1.1.2",
+}
+
 var SubjectAndIssuerNames = map[string]string{
+	"CN":                         "common_name",
+	"SN":                         "surname",
+	"C":                          "country_name",
+	"L":                          "locality_name",
+	"S":                          "state_or_province_name",
+	"STREET":                     "street_address",
+	"O":                          "organization_name",
+	"OU":                         "organizational_unit_name",
+	"T":                          "title",
+	"TITLE":                      "title",
+	"G":                          "given_name",
+	"GN":                         "given_name",
+	"E":                          "email_address",
 	"2.5.4.3":                    "common_name",
 	"2.5.4.4":                    "surname",
 	"2.5.4.5":                    "serial_number",
@@ -56,11 +79,19 @@ var SubjectAndIssuerNames = map[string]string{
 	"0.9.2342.19200300.100.1.1":  "user_id",
 	"0.9.2342.19200300.100.1.25": "domain_component",
 	"0.2.262.1.10.7.20":          "name_distinguisher",
+	"ОГРН":                       "ogrn",
 	"1.2.643.100.1":              "ogrn",
+	"OID.1.2.643.100.1":          "ogrn",
+	"СНИЛС":                      "snils",
 	"1.2.643.100.3":              "snils",
+	"OID.1.2.643.100.3":          "snils",
 	"1.2.643.100.4":              "innle",
+	"OID.1.2.643.100.4":          "innle",
 	"1.2.643.100.5":              "ogrnip",
+	"OID.1.2.643.100.5":          "ogrnip",
+	"ИНН":                        "inn",
 	"1.2.643.3.131.1.1":          "inn",
+	"OID.1.2.643.3.131.1.1":      "inn",
 }
 
 type AlgorithmInfo struct {
@@ -76,6 +107,8 @@ type GostCertificate struct {
 	Thumbprint     string            `json:"thumbprint"`
 	PublicKey      string            `json:"public_key"`
 	ShortPublicKey string            `json:"short_public_key"`
+	Container      string            `json:"container,omitempty"`
+	ContainerLink  bool              `json:"container_link,omitempty"`
 	Algorithm      AlgorithmInfo     `json:"algorithm"`
 	NotAfter       time.Time         `json:"not_after"`
 	NotBefore      time.Time         `json:"not_before"`
@@ -444,6 +477,134 @@ func ParseGostCertificate(x509Certificate *x509.Certificate) (*GostCertificate, 
 	fingerprint := hex.EncodeToString(fingerprintRaw[:])
 	certificate.Thumbprint = fingerprint
 	return &certificate, nil
+}
+
+func ParseDnFromCli(dn string) map[string]string {
+	result := make(map[string]string)
+	var lastLine string
+
+	for _, line := range strings.Split(dn, ", ") {
+		if !strings.Contains(line, "=") {
+			lastLine = strings.Join([]string{lastLine, line}, ", ")
+			continue
+		}
+
+		if strings.Contains(lastLine, "=") {
+			raw := strings.Split(lastLine, "=")
+			name := strings.TrimSpace(raw[0])
+			value := strings.TrimSpace(raw[1])
+			if v, ok := SubjectAndIssuerNames[name]; ok {
+				result[v] = value
+			} else {
+				result[name] = value
+			}
+		}
+		lastLine = line
+
+		raw := strings.Split(line, "=")
+		name := strings.TrimSpace(raw[0])
+		value := strings.TrimSpace(raw[1])
+		if v, ok := SubjectAndIssuerNames[name]; ok {
+			result[v] = value
+		} else {
+			result[name] = value
+		}
+	}
+
+	return result
+}
+
+func ParseGostCertificatesFromCli(output string) ([]GostCertificate, error) {
+	blocks := regexp.MustCompile(`(?m)^\s*\d+-*(\n|\r\n)`).Split(output, -1)
+	certs := []GostCertificate{}
+
+	for _, b := range blocks[1:] {
+		lines := strings.Split(b, "\n")
+		cert := GostCertificate{
+			Issuer:    make(map[string]string),
+			Subject:   make(map[string]string),
+			Algorithm: AlgorithmInfo{},
+		}
+
+		for i := 0; i < len(lines); i++ {
+			line := strings.TrimSpace(lines[i])
+			if line == "" {
+				continue
+			}
+
+			parts := strings.SplitN(line, ":", 2)
+			fieldName := strings.TrimSpace(parts[0])
+			if len(parts) > 1 {
+				parts[1] = strings.TrimSpace(parts[1])
+			}
+
+			switch fieldName {
+			case "Издатель", "Issuer":
+				cert.Issuer = ParseDnFromCli(parts[1])
+			case "Субъект", "Subject":
+				cert.Subject = ParseDnFromCli(parts[1])
+			case "Серийный номер", "Serial":
+				cert.SerialNumber = parts[1]
+			case "Хэш SHA1", "SHA1 Hash":
+				cert.Thumbprint = parts[1]
+			case "Открытый ключ", "Public key":
+				key := ""
+				first := parts[1]
+				if first != "" {
+					key += first + " "
+				}
+				for j := i + 1; j < len(lines); j++ {
+					next := strings.TrimSpace(lines[j])
+					if next == "" || regexp.MustCompile(`^[\da-fA-F ]+$`).MatchString(next) {
+						key += next + " "
+						i++
+					} else {
+						break
+					}
+				}
+				key = strings.ReplaceAll(strings.TrimSpace(key), " ", "")
+
+				rawKey, err := hex.DecodeString(key)
+				if err != nil {
+					continue
+				}
+
+				publicKeyInfo := SubjectPublicKeyInfoAsn1{
+					AlgorithmInfo: AlgorithmInfoAsn1{},
+					PublicKey: asn1.BitString{
+						Bytes: rawKey,
+					},
+				}
+				cert.PublicKey = GetCertificatePublicKey(&publicKeyInfo)
+				cert.ShortPublicKey = GetCertificateShortPublicKey(&publicKeyInfo)
+			case "Контейнер", "Container":
+				cert.Container = parts[1]
+			case "Ссылка на ключ", "PrivateKey Link":
+				v := parts[1]
+				cert.ContainerLink = v == "Есть" || v == "Yes"
+			case "Алгоритм подписи", "Signature Algorithm":
+				info := parts[1]
+				if oid, ok := GostAlgorithmOIDs[info]; ok {
+					cert.Algorithm.OID = oid
+				}
+				cert.Algorithm.Name = info
+			case "Выдан", "Not valid before":
+				dt, err := time.Parse("02/01/2006  15:04:05 MST", parts[1])
+				if err == nil {
+					cert.NotBefore = dt
+				}
+			case "Истекает", "Not valid after":
+				dt, err := time.Parse("02/01/2006  15:04:05 MST", parts[1])
+				if err == nil {
+					cert.NotAfter = dt
+				}
+			default:
+				continue
+			}
+		}
+		certs = append(certs, cert)
+	}
+	return certs, nil
 }
 
 func DirectRenameContainerFolder(path string, newNameInCP1251 string) (bool, error) {
