@@ -143,7 +143,7 @@ func (cm *CadesManager) IsCertificateExists(thumbprint string, store string) (bo
 }
 
 // Optional args: thumbprint, store
-func GetCertificatesInfo(thumbprint string, store string) ([]GostCertificate, error) {
+func (cm *CadesManager) GetCertificatesInfo(thumbprint string, store string) ([]GostCertificate, error) {
 	result := []GostCertificate{}
 	args := []string{"-list", "-verbose"}
 	if thumbprint != "" {

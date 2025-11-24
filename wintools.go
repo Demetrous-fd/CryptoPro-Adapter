@@ -93,14 +93,14 @@ func renameRegistryKey(oldPath string, newPath string) error {
 
 func getCryptoProUsersRegistryKey() (string, error) {
 	keyPath := `SOFTWARE\WOW6432Node\Crypto Pro\Settings\Users`
-	key, err := registry.OpenKey(registry.LOCAL_MACHINE, keyPath, registry.READ|registry.WRITE)
+	key, err := registry.OpenKey(registry.LOCAL_MACHINE, keyPath, registry.READ)
 	if err == nil {
 		defer key.Close()
 		return keyPath, nil
 	}
 
 	keyPath = `SOFTWARE\CryptoPro\Settings\Users`
-	key, err = registry.OpenKey(registry.LOCAL_MACHINE, keyPath, registry.READ|registry.WRITE)
+	key, err = registry.OpenKey(registry.LOCAL_MACHINE, keyPath, registry.READ)
 	if err == nil {
 		defer key.Close()
 		return keyPath, nil
