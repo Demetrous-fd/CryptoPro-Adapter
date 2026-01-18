@@ -353,19 +353,43 @@ func (cm *CadesManager) RenameContainer(container *Container, newContainerName s
 	return result, nil
 }
 
-func (cm *CadesManager) ExportContainerToPfx(filePath string, containerName string, password string) (string, error) {
-	var args []string = []string{"-export", "-container", containerName, "-pfx", "-dest", filePath}
+func (cm *CadesManager) exportContainerToPfx(password string, args ...string) error {
 	if password != "" {
 		args = append(args, "-pin", password)
 	}
 
 	output, err := NewCertManagerProcess(args...)
 	if err != nil {
-		slog.Debug(fmt.Sprintf("Fail to export container[%s] to pfx[%s], error: %s", containerName, filePath, err))
 		slog.Debug(fmt.Sprintf("Certmgr log: %s", output))
 		if strings.Contains(output, "ErrorCode: 0x8009000b") {
-			return "", ErrContainerNotExportable
+			return ErrContainerNotExportable
 		}
+		return err
+	}
+	return nil
+}
+
+// Используется для экспорта контейнера в pfx на новых версиях КриптоПро CSP от 4.0.9975 Euclid и выше.
+// На версиях ниже 4.0.9975 Euclid создается pfx без закрытого ключа, используйте ExportContainerToPfxByThumbprint
+func (cm *CadesManager) ExportContainerToPfx(filePath string, containerName string, password string) (string, error) {
+	var args []string = []string{"-export", "-container", containerName, "-pfx", "-dest", filePath}
+
+	err := cm.exportContainerToPfx(password, args...)
+	if err != nil {
+		slog.Debug(fmt.Sprintf("Fail to export container[%s] to pfx[%s], error: %s", containerName, filePath, err))
+		return "", err
+	}
+
+	return filePath, nil
+}
+
+// Используется для экспорта контейнера в pfx на старых версиях КриптоПро CSP младше 4.0.9975 Euclid
+func (cm *CadesManager) ExportContainerToPfxByThumbprint(filePath string, thumbprint string, password string) (string, error) {
+	var args []string = []string{"-export", "-thumbprint", thumbprint, "-pfx", "-dest", filePath}
+
+	err := cm.exportContainerToPfx(password, args...)
+	if err != nil {
+		slog.Debug(fmt.Sprintf("Fail to export container with thumbprint[%s] to pfx[%s], error: %s", thumbprint, filePath, err))
 		return "", err
 	}
 
